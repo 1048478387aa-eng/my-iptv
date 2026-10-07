@@ -1,0 +1,34 @@
+name: IPTV Auto Update
+
+on:
+  schedule:
+    # 每天北京时间早上 6 点和傍晚 18 点自动执行一次 (UTC 22:00 和 10:00)
+    - cron: '0 22,10 * * *'
+  workflow_dispatch: # 开启这个才能在手机上看到手动触发按钮
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 安装依赖
+        run: |
+          pip install requests
+
+      - name: 运行抓取脚本
+        run: python iptv_spider.py
+
+      - name: 提交更新到仓库
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "自动更新直播源"
+          git push
